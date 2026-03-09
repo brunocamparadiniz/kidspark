@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp:*)",
+      "Bash(export:*)",
+      "Bash(npm install:*)",
+      "Bash(rm:*)",
+      "Bash(ls:*)",
+      "Bash(npm ls:*)",
+      "Bash(node:*)",
+      "Bash(echo:*)",
+      "Bash(/opt/homebrew/bin/node:*)",
+      "Bash(/opt/homebrew/bin/npx tsc:*)",
+      "Bash(git log:*)",
+      "Bash(./node_modules/.bin/tsc:*)",
+      "Bash(npx tsc:*)",
+      "Bash(xargs cat:*)",
+      "Bash(grep:*)",
+      "Bash(npx expo-env-info:*)"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(export PATH=\"/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH\")",
+      "Read(//Users/brunocamparadiniz/Desktop/projetos/**)",
+      "Bash(npx create-expo-app@latest kidspark --template blank-typescript)",
+      "Bash(mv:*)"
+    ]
+  }
+}
