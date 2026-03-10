@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Link, router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
 import { Colors, Spacing, FontSizes } from '@/constants/themes';
 
 export default function RegisterScreen() {
+  const { t } = useTranslation();
   const { signUp } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -16,12 +18,12 @@ export default function RegisterScreen() {
 
   async function handleSignUp() {
     if (!fullName.trim() || !email.trim() || !password.trim()) {
-      setError('Preencha todos os campos');
+      setError(t('auth.register.fillAllFields'));
       return;
     }
 
     if (password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres');
+      setError(t('auth.register.passwordTooShort'));
       return;
     }
 
@@ -49,22 +51,22 @@ export default function RegisterScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={styles.title}>KidSpark</Text>
-          <Text style={styles.subtitle}>Crie sua conta</Text>
+          <Text style={styles.title}>{t('auth.register.title')}</Text>
+          <Text style={styles.subtitle}>{t('auth.register.subtitle')}</Text>
         </View>
 
         <View style={styles.form}>
           <Input
-            label="Nome completo"
-            placeholder="Seu nome"
+            label={t('auth.register.fullName')}
+            placeholder={t('auth.register.fullNamePlaceholder')}
             value={fullName}
             onChangeText={setFullName}
             autoCapitalize="words"
           />
 
           <Input
-            label="E-mail"
-            placeholder="seu@email.com"
+            label={t('auth.register.email')}
+            placeholder={t('auth.register.emailPlaceholder')}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -73,8 +75,8 @@ export default function RegisterScreen() {
           />
 
           <Input
-            label="Senha"
-            placeholder="Mínimo 6 caracteres"
+            label={t('auth.register.password')}
+            placeholder={t('auth.register.passwordPlaceholder')}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -83,16 +85,16 @@ export default function RegisterScreen() {
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <Button
-            title="Criar conta"
+            title={t('auth.register.button')}
             onPress={handleSignUp}
             loading={loading}
             style={styles.button}
           />
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Já tem uma conta? </Text>
+            <Text style={styles.footerText}>{t('auth.register.hasAccount')}</Text>
             <Link href="/(auth)/login" style={styles.link}>
-              Entrar
+              {t('auth.register.signIn')}
             </Link>
           </View>
         </View>

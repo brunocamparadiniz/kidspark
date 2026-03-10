@@ -1,0 +1,112 @@
+{
+  "app": {
+    "name": "KidSpark"
+  },
+  "auth": {
+    "login": {
+      "title": "KidSpark",
+      "subtitle": "Entre na sua conta",
+      "email": "E-mail",
+      "emailPlaceholder": "seu@email.com",
+      "password": "Senha",
+      "passwordPlaceholder": "Sua senha",
+      "button": "Entrar",
+      "noAccount": "Não tem uma conta? ",
+      "createAccount": "Criar conta",
+      "fillAllFields": "Preencha todos os campos"
+    },
+    "register": {
+      "title": "KidSpark",
+      "subtitle": "Crie sua conta",
+      "fullName": "Nome completo",
+      "fullNamePlaceholder": "Seu nome",
+      "email": "E-mail",
+      "emailPlaceholder": "seu@email.com",
+      "password": "Senha",
+      "passwordPlaceholder": "Mínimo 6 caracteres",
+      "button": "Criar conta",
+      "hasAccount": "Já tem uma conta? ",
+      "signIn": "Entrar",
+      "fillAllFields": "Preencha todos os campos",
+      "passwordTooShort": "A senha deve ter pelo menos 6 caracteres"
+    }
+  },
+  "parent": {
+    "dashboard": {
+      "greeting": "Olá, {{name}}!",
+      "subtitle": "Painel dos pais",
+      "logout": "Sair",
+      "children": "Crianças",
+      "noChildren": "Nenhuma criança cadastrada ainda.",
+      "addChild": "Adicionar criança",
+      "addChildLink": "+ Adicionar criança",
+      "active": "Ativo",
+      "session": "Sessão",
+      "newSession": "Nova sessão para {{name}}",
+      "ageYears": "{{years}} ano",
+      "ageYearsPlural": "{{years}} anos",
+      "ageMonths": "{{months}} meses",
+      "ageYearsAndMonths": "{{years}} ano(s) e {{months}} mes(es)"
+    },
+    "addChild": {
+      "title": "Nova criança",
+      "name": "Nome",
+      "namePlaceholder": "Nome da criança",
+      "birthDate": "Data de nascimento",
+      "cancel": "Cancelar",
+      "add": "Adicionar",
+      "fillFields": "Preencha nome e data de nascimento",
+      "invalidDate": "Data inválida"
+    },
+    "setupSession": {
+      "back": "Voltar",
+      "title": "Nova Sessão",
+      "child": "Criança",
+      "duration": "Duração",
+      "mood": "Humor da criança",
+      "goals": "Objetivos",
+      "goalsHint": "Selecione um ou mais",
+      "summary": "Resumo",
+      "start": "Iniciar sessão",
+      "selectChild": "Selecione uma criança",
+      "selectGoal": "Selecione ao menos um objetivo",
+      "sessionCreated": "Sessão criada!",
+      "sessionCreatedMessage": "A sessão foi gerada com sucesso.",
+      "error": "Erro"
+    },
+    "settings": {
+      "title": "Configurações",
+      "back": "Voltar",
+      "language": "Idioma",
+      "portuguese": "Português (BR)",
+      "english": "English",
+      "account": "Conta",
+      "logout": "Sair da conta",
+      "logoutConfirm": "Tem certeza que deseja sair?",
+      "logoutConfirmButton": "Sair",
+      "cancel": "Cancelar",
+      "version": "Versão"
+    }
+  },
+  "moods": {
+    "calm": "Calma",
+    "energetic": "Agitada",
+    "sleepy": "Sonolenta",
+    "curious": "Curiosa"
+  },
+  "goals": {
+    "letters": "Letras",
+    "numbers": "Números",
+    "emotions": "Emoções",
+    "creativity": "Criatividade",
+    "nature": "Natureza",
+    "colors": "Cores",
+    "language_english": "Inglês"
+  },
+  "durations": {
+    "15": "15 min",
+    "30": "30 min",
+    "45": "45 min",
+    "60": "60 min"
+  }
+}

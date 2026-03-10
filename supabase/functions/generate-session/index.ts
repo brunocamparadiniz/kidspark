@@ -1,32 +1,45 @@
 import Anthropic from 'npm:@anthropic-ai/sdk'
 
-const SESSION_SYSTEM_PROMPT = `
-Voce e um educador especialista em desenvolvimento infantil de 2 a 5 anos.
-Sua tarefa e criar sessoes de aprendizado interativas, ludicas e adaptadas.
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
-Regras:
-- Sempre retorne JSON valido, sem markdown, sem texto extra
-- Atividades devem ser curtas: 2-5 minutos cada
-- Linguagem simples, frases curtas, muita positividade
-- Variar tipos de atividade para manter engajamento
-- Adaptar ao humor informado (agitada = mais estrutura, sonolenta = mais calma)
+const SESSION_SYSTEM_PROMPT = `
+You are an expert educator in child development for ages 2-5.
+Create interactive, playful learning sessions.
+
+Rules:
+- Always return valid JSON, no markdown, no extra text
+- Each activity: 2-5 minutes
+- Simple language, short sentences, positivity
+- Vary activity types for engagement
+- Adapt to mood (energetic = more structure, sleepy = calmer activities)
+- Respond in the language specified in the "language" field (default: pt-BR)
 `
 
 Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   try {
-    const { config, childName } = await req.json()
+    const { sessionId, config, childName } = await req.json()
 
     const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') })
 
+    const language = config.language ?? 'pt-BR'
+
     const prompt = `
-Crie uma sessao educativa para ${childName}.
+Create an educational session for ${childName}.
 
-Configuracao:
-- Duracao total: ${config.durationMinutes} minutos
-- Humor atual da crianca: ${config.mood}
-- Objetivos de aprendizado: ${config.goals.join(', ')}
+Configuration:
+- Total duration: ${config.durationMinutes} minutes
+- Child's current mood: ${config.mood}
+- Learning goals: ${config.goals.join(', ')}
+- Language: ${language}
 
-Retorne um JSON com este formato exato:
+Return a JSON with this exact format:
 {
   "activities": [
     {
@@ -34,11 +47,11 @@ Retorne um JSON com este formato exato:
       "title": "string",
       "duration_minutes": number,
       "content": {
-        // para story: { "text": "...", "pages": [...] }
-        // para song: { "lyrics": "...", "rhythm": "slow|fast" }
-        // para minigame: { "instructions": "...", "elements": [...] }
-        // para question: { "question": "...", "hint": "..." }
-        // para drawing: { "prompt": "...", "colors": [...] }
+        // for story: { "text": "...", "pages": [...] }
+        // for song: { "lyrics": "...", "rhythm": "slow|fast" }
+        // for minigame: { "instructions": "...", "elements": [...] }
+        // for question: { "question": "...", "hint": "..." }
+        // for drawing: { "prompt": "...", "colors": [...] }
       }
     }
   ]
@@ -46,7 +59,7 @@ Retorne um JSON com este formato exato:
 `
 
     const message = await client.messages.create({
-      model: 'claude-opus-4-6',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 2048,
       system: SESSION_SYSTEM_PROMPT,
       messages: [{ role: 'user', content: prompt }],
@@ -56,12 +69,12 @@ Retorne um JSON com este formato exato:
     const parsed = JSON.parse(text)
 
     return new Response(JSON.stringify(parsed), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
     return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 })

@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useChildProfile } from '@/hooks/useChildProfile';
 import { useSession } from '@/hooks/useSession';
 import { Button } from '@/components/shared/Button';
@@ -18,6 +19,7 @@ import { DURATION_OPTIONS, MOOD_OPTIONS, GOAL_OPTIONS } from '@/constants/activi
 import type { Mood, Goal } from '@/types';
 
 export default function SetupSessionScreen() {
+  const { t } = useTranslation();
   const { children, selectedChild, selectChild } = useChildProfile();
   const { createSession, isLoading } = useSession();
 
@@ -33,12 +35,12 @@ export default function SetupSessionScreen() {
 
   async function handleStart() {
     if (!selectedChild) {
-      Alert.alert('Selecione uma criança');
+      Alert.alert(t('parent.setupSession.selectChild'));
       return;
     }
 
     if (goals.length === 0) {
-      Alert.alert('Selecione ao menos um objetivo');
+      Alert.alert(t('parent.setupSession.selectGoal'));
       return;
     }
 
@@ -50,12 +52,11 @@ export default function SetupSessionScreen() {
     });
 
     if (error) {
-      Alert.alert('Erro', error);
+      Alert.alert(t('parent.setupSession.error'), error);
       return;
     }
 
-    // TODO: Navigate to child session screen (Phase 3)
-    Alert.alert('Sessão criada!', 'A sessão foi gerada com sucesso.');
+    Alert.alert(t('parent.setupSession.sessionCreated'), t('parent.setupSession.sessionCreatedMessage'));
     router.back();
   }
 
@@ -65,14 +66,14 @@ export default function SetupSessionScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backText}>Voltar</Text>
+            <Text style={styles.backText}>{t('parent.setupSession.back')}</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>Nova Sessão</Text>
+          <Text style={styles.title}>{t('parent.setupSession.title')}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
         {/* Child selector */}
-        <Text style={styles.sectionTitle}>Criança</Text>
+        <Text style={styles.sectionTitle}>{t('parent.setupSession.child')}</Text>
         <View style={styles.optionRow}>
           {children.map((child) => (
             <TouchableOpacity
@@ -96,7 +97,7 @@ export default function SetupSessionScreen() {
         </View>
 
         {/* Duration */}
-        <Text style={styles.sectionTitle}>Duração</Text>
+        <Text style={styles.sectionTitle}>{t('parent.setupSession.duration')}</Text>
         <View style={styles.optionRow}>
           {DURATION_OPTIONS.map((opt) => (
             <TouchableOpacity
@@ -113,14 +114,14 @@ export default function SetupSessionScreen() {
                   duration === opt.value && styles.optionPillTextSelected,
                 ]}
               >
-                {opt.label}
+                {t(`durations.${opt.value}`)}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Mood */}
-        <Text style={styles.sectionTitle}>Humor da criança</Text>
+        <Text style={styles.sectionTitle}>{t('parent.setupSession.mood')}</Text>
         <View style={styles.optionRow}>
           {MOOD_OPTIONS.map((opt) => (
             <TouchableOpacity
@@ -138,15 +139,15 @@ export default function SetupSessionScreen() {
                   mood === opt.value && styles.moodLabelSelected,
                 ]}
               >
-                {opt.label}
+                {t(`moods.${opt.value}`)}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Goals */}
-        <Text style={styles.sectionTitle}>Objetivos</Text>
-        <Text style={styles.sectionHint}>Selecione um ou mais</Text>
+        <Text style={styles.sectionTitle}>{t('parent.setupSession.goals')}</Text>
+        <Text style={styles.sectionHint}>{t('parent.setupSession.goalsHint')}</Text>
         <View style={styles.goalsGrid}>
           {GOAL_OPTIONS.map((opt) => {
             const isSelected = goals.includes(opt.value as Goal);
@@ -166,7 +167,7 @@ export default function SetupSessionScreen() {
                     isSelected && styles.goalLabelSelected,
                   ]}
                 >
-                  {opt.label}
+                  {t(`goals.${opt.value}`)}
                 </Text>
               </TouchableOpacity>
             );
@@ -176,19 +177,19 @@ export default function SetupSessionScreen() {
         {/* Summary */}
         {selectedChild && goals.length > 0 && (
           <Card style={styles.summaryCard}>
-            <Text style={styles.summaryTitle}>Resumo</Text>
+            <Text style={styles.summaryTitle}>{t('parent.setupSession.summary')}</Text>
             <Text style={styles.summaryText}>
-              {selectedChild.name} - {duration} min - {MOOD_OPTIONS.find((m) => m.value === mood)?.label}
+              {selectedChild.name} - {t(`durations.${duration}`)} - {t(`moods.${mood}`)}
             </Text>
             <Text style={styles.summaryText}>
-              Objetivos: {goals.map((g) => GOAL_OPTIONS.find((o) => o.value === g)?.label).join(', ')}
+              {t('parent.setupSession.goals')}: {goals.map((g) => t(`goals.${g}`)).join(', ')}
             </Text>
           </Card>
         )}
 
         {/* Start button */}
         <Button
-          title="Iniciar sessão"
+          title={t('parent.setupSession.start')}
           onPress={handleStart}
           loading={isLoading}
           variant="secondary"

@@ -1,0 +1,112 @@
+{
+  "app": {
+    "name": "KidSpark"
+  },
+  "auth": {
+    "login": {
+      "title": "KidSpark",
+      "subtitle": "Sign in to your account",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "password": "Password",
+      "passwordPlaceholder": "Your password",
+      "button": "Sign In",
+      "noAccount": "Don't have an account? ",
+      "createAccount": "Create account",
+      "fillAllFields": "Fill in all fields"
+    },
+    "register": {
+      "title": "KidSpark",
+      "subtitle": "Create your account",
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Your name",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "password": "Password",
+      "passwordPlaceholder": "At least 6 characters",
+      "button": "Create account",
+      "hasAccount": "Already have an account? ",
+      "signIn": "Sign In",
+      "fillAllFields": "Fill in all fields",
+      "passwordTooShort": "Password must be at least 6 characters"
+    }
+  },
+  "parent": {
+    "dashboard": {
+      "greeting": "Hello, {{name}}!",
+      "subtitle": "Parent dashboard",
+      "logout": "Logout",
+      "children": "Children",
+      "noChildren": "No children registered yet.",
+      "addChild": "Add child",
+      "addChildLink": "+ Add child",
+      "active": "Active",
+      "session": "Session",
+      "newSession": "New session for {{name}}",
+      "ageYears": "{{years}} year",
+      "ageYearsPlural": "{{years}} years",
+      "ageMonths": "{{months}} months",
+      "ageYearsAndMonths": "{{years}} year(s) and {{months}} month(s)"
+    },
+    "addChild": {
+      "title": "New child",
+      "name": "Name",
+      "namePlaceholder": "Child's name",
+      "birthDate": "Date of birth",
+      "cancel": "Cancel",
+      "add": "Add",
+      "fillFields": "Fill in name and date of birth",
+      "invalidDate": "Invalid date"
+    },
+    "setupSession": {
+      "back": "Back",
+      "title": "New Session",
+      "child": "Child",
+      "duration": "Duration",
+      "mood": "Child's mood",
+      "goals": "Goals",
+      "goalsHint": "Select one or more",
+      "summary": "Summary",
+      "start": "Start session",
+      "selectChild": "Select a child",
+      "selectGoal": "Select at least one goal",
+      "sessionCreated": "Session created!",
+      "sessionCreatedMessage": "The session was generated successfully.",
+      "error": "Error"
+    },
+    "settings": {
+      "title": "Settings",
+      "back": "Back",
+      "language": "Language",
+      "portuguese": "Português (BR)",
+      "english": "English",
+      "account": "Account",
+      "logout": "Log out",
+      "logoutConfirm": "Are you sure you want to log out?",
+      "logoutConfirmButton": "Log out",
+      "cancel": "Cancel",
+      "version": "Version"
+    }
+  },
+  "moods": {
+    "calm": "Calm",
+    "energetic": "Energetic",
+    "sleepy": "Sleepy",
+    "curious": "Curious"
+  },
+  "goals": {
+    "letters": "Letters",
+    "numbers": "Numbers",
+    "emotions": "Emotions",
+    "creativity": "Creativity",
+    "nature": "Nature",
+    "colors": "Colors",
+    "language_english": "English"
+  },
+  "durations": {
+    "15": "15 min",
+    "30": "30 min",
+    "45": "45 min",
+    "60": "60 min"
+  }
+}

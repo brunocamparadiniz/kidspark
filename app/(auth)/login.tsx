@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Link, router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
 import { Colors, Spacing, FontSizes } from '@/constants/themes';
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,7 +17,7 @@ export default function LoginScreen() {
 
   async function handleSignIn() {
     if (!email.trim() || !password.trim()) {
-      setError('Preencha todos os campos');
+      setError(t('auth.login.fillAllFields'));
       return;
     }
 
@@ -43,14 +45,14 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <Text style={styles.title}>KidSpark</Text>
-          <Text style={styles.subtitle}>Entre na sua conta</Text>
+          <Text style={styles.title}>{t('auth.login.title')}</Text>
+          <Text style={styles.subtitle}>{t('auth.login.subtitle')}</Text>
         </View>
 
         <View style={styles.form}>
           <Input
-            label="E-mail"
-            placeholder="seu@email.com"
+            label={t('auth.login.email')}
+            placeholder={t('auth.login.emailPlaceholder')}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -59,8 +61,8 @@ export default function LoginScreen() {
           />
 
           <Input
-            label="Senha"
-            placeholder="Sua senha"
+            label={t('auth.login.password')}
+            placeholder={t('auth.login.passwordPlaceholder')}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -69,16 +71,16 @@ export default function LoginScreen() {
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <Button
-            title="Entrar"
+            title={t('auth.login.button')}
             onPress={handleSignIn}
             loading={loading}
             style={styles.button}
           />
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Não tem uma conta? </Text>
+            <Text style={styles.footerText}>{t('auth.login.noAccount')}</Text>
             <Link href="/(auth)/register" style={styles.link}>
-              Criar conta
+              {t('auth.login.createAccount')}
             </Link>
           </View>
         </View>

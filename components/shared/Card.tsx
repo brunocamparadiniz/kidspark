@@ -1,18 +1,14 @@
 import React from 'react';
-import { View, StyleSheet, type ViewStyle, type ViewProps } from 'react-native';
+import { View, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
 import { Colors, Spacing, BorderRadius } from '@/constants/themes';
 
-interface CardProps extends ViewProps {
+interface CardProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
-export function Card({ children, style, ...props }: CardProps) {
-  return (
-    <View style={[styles.card, style]} {...props}>
-      {children}
-    </View>
-  );
+export function Card({ children, style }: CardProps) {
+  return <View style={[styles.card, style]}>{children}</View>;
 }
 
 const styles = StyleSheet.create({
@@ -22,8 +18,8 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 2,
   },
 });

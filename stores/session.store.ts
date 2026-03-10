@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase';
+import { useChildStore } from '@/stores/child.store';
 import type { Session, SessionConfig, Activity } from '@/types';
 
 interface SessionState {
@@ -43,6 +44,11 @@ export const useSessionStore = create<SessionState>((set) => ({
       return { error: sessionError?.message ?? 'Erro ao criar sessão' };
     }
 
+    // Get child name for the edge function prompt
+    const childState = useChildStore.getState();
+    const child = childState.children.find((c) => c.id === config.childId);
+    const childName = child?.name ?? 'Crianca';
+
     // Call Edge Function to generate activities
     const { data: generatedData, error: fnError } = await supabase.functions.invoke(
       'generate-session',
@@ -50,6 +56,7 @@ export const useSessionStore = create<SessionState>((set) => ({
         body: {
           sessionId: sessionRow.id,
           config,
+          childName,
         },
       },
     );
