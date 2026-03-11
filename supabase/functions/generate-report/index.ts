@@ -12,7 +12,9 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { sessionId } = await req.json()
+    const { sessionId, language } = await req.json()
+    const lang = language ?? 'pt-BR'
+    const isPt = lang.startsWith('pt')
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -34,26 +36,33 @@ Deno.serve(async (req: Request) => {
 
     const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') })
 
+    const completedCount = session.session_activities.filter((a: { completed: boolean }) => a.completed).length
+    const totalCount = session.session_activities.length
+    const activitiesList = session.session_activities.map((a: { title: string; activity_type: string; completed: boolean; engagement_score: number }) =>
+      `- ${a.title} (${a.activity_type}) — completed: ${a.completed}, engagement: ${a.engagement_score ?? 'n/a'}/5`
+    ).join('\n')
+
     const prompt = `
-Analise esta sessao educativa e gere um relatorio de desenvolvimento para os pais.
+Analyze this educational session and generate a development report for the parents.
+Respond entirely in ${isPt ? 'Brazilian Portuguese (pt-BR)' : 'English'}.
 
-Crianca: ${session.children.name}
-Duracao: ${session.duration_minutes} minutos
-Humor inicial: ${session.mood}
-Objetivos: ${session.goals.join(', ')}
-Atividades completadas: ${session.session_activities.filter((a: { completed: boolean }) => a.completed).length} de ${session.session_activities.length}
+Child: ${session.children.name}
+Duration: ${session.duration_minutes} minutes
+Initial mood: ${session.mood}
+Goals: ${session.goals.join(', ')}
+Activities completed: ${completedCount} of ${totalCount}
 
-Atividades:
-${session.session_activities.map((a: { title: string; activity_type: string; completed: boolean; engagement_score: number }) => `- ${a.title} (${a.activity_type}) — completada: ${a.completed}, engajamento: ${a.engagement_score ?? 'n/a'}/5`).join('\n')}
+Activities:
+${activitiesList}
 
-Retorne um JSON com este formato:
+Return a JSON with this exact format (no markdown, no extra text):
 {
-  "summary": "paragrafo curto e positivo para os pais",
-  "skills_practiced": ["habilidade1", "habilidade2"],
+  "summary": "short positive paragraph for parents",
+  "skills_practiced": ["skill1", "skill2"],
   "highlights": {
-    "best_activity": "nome da melhor atividade",
-    "engagement_level": "alto|medio|baixo",
-    "recommendation": "sugestao para proxima sessao"
+    "best_activity": "name of best activity",
+    "engagement_level": "${isPt ? 'alto|medio|baixo' : 'high|medium|low'}",
+    "recommendation": "suggestion for next session"
   }
 }
 `
@@ -64,7 +73,8 @@ Retorne um JSON com este formato:
       messages: [{ role: 'user', content: prompt }],
     })
 
-    const text = message.content[0].type === 'text' ? message.content[0].text : ''
+    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
+    const text = raw.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim()
     const parsed = JSON.parse(text)
 
     const { data: report } = await supabase

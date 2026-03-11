@@ -1,6 +1,8 @@
 import { create } from 'zustand';
+import i18n from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import { useChildStore } from '@/stores/child.store';
+import { useReportStore } from '@/stores/report.store';
 import type { Session, SessionConfig, Activity } from '@/types';
 
 interface SessionState {
@@ -8,6 +10,8 @@ interface SessionState {
   recentSessions: Session[];
   isLoading: boolean;
   createSession: (config: SessionConfig) => Promise<{ error: string | null }>;
+  completeActivity: (activityId: string) => Promise<void>;
+  completeSession: () => Promise<void>;
   fetchRecentSessions: (childId: string) => Promise<void>;
 }
 
@@ -55,15 +59,31 @@ export const useSessionStore = create<SessionState>((set) => ({
       {
         body: {
           sessionId: sessionRow.id,
-          config,
+          config: { ...config, language: i18n.language },
           childName,
         },
       },
     );
 
     if (fnError) {
+      // Try to extract a more specific error from the response context
+      let detail = fnError.message;
+      if (fnError.context && typeof fnError.context === 'object') {
+        try {
+          const body = await (fnError.context as Response).json();
+          if (body?.error) detail = body.error;
+        } catch {
+          // response body not parseable, keep original message
+        }
+      }
       set({ isLoading: false });
-      return { error: `Erro ao gerar atividades: ${fnError.message}` };
+      return { error: detail };
+    }
+
+    // Edge function returned 2xx but might have an error in the body
+    if (generatedData?.error) {
+      set({ isLoading: false });
+      return { error: generatedData.error };
     }
 
     // Save generated activities to session_activities
@@ -110,6 +130,66 @@ export const useSessionStore = create<SessionState>((set) => ({
 
     set({ currentSession: session, isLoading: false });
     return { error: null };
+  },
+
+  completeActivity: async (activityId) => {
+    await supabase
+      .from('session_activities')
+      .update({ completed: true })
+      .eq('id', activityId);
+
+    set((state) => {
+      if (!state.currentSession) return state;
+      return {
+        currentSession: {
+          ...state.currentSession,
+          activities: state.currentSession.activities.map((a) =>
+            a.id === activityId ? { ...a, completed: true } : a,
+          ),
+        },
+      };
+    });
+  },
+
+  completeSession: async () => {
+    const session = useSessionStore.getState().currentSession;
+    if (!session) return;
+
+    await supabase
+      .from('sessions')
+      .update({ status: 'completed', ended_at: new Date().toISOString() })
+      .eq('id', session.id);
+
+    set((state) => {
+      if (!state.currentSession) return state;
+      return {
+        currentSession: {
+          ...state.currentSession,
+          status: 'completed',
+          endedAt: new Date().toISOString(),
+        },
+      };
+    });
+
+    // Generate development report in the background
+    supabase.functions
+      .invoke('generate-report', { body: { sessionId: session.id, language: i18n.language } })
+      .then(({ data }) => {
+        if (data && !data.error) {
+          useReportStore.getState().addReport({
+            id: data.id,
+            childId: data.child_id,
+            sessionId: data.session_id,
+            summary: data.summary,
+            skillsPracticed: data.skills_practiced,
+            highlights: data.highlights,
+            createdAt: data.created_at,
+          });
+        }
+      })
+      .catch(() => {
+        // Report generation failed silently — parent can refresh later
+      });
   },
 
   fetchRecentSessions: async (childId) => {

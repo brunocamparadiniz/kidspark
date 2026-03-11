@@ -9,14 +9,15 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { audio } = await req.json()
+    const { audio, language } = await req.json()
+    const lang = language ?? 'pt'
 
     const binaryAudio = Uint8Array.from(atob(audio), (c) => c.charCodeAt(0))
 
     const formData = new FormData()
     formData.append('file', new Blob([binaryAudio], { type: 'audio/m4a' }), 'audio.m4a')
     formData.append('model', 'whisper-1')
-    formData.append('language', 'pt')
+    formData.append('language', lang)
 
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',

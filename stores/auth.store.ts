@@ -76,18 +76,41 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 }));
 
 async function fetchProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', userId)
     .single();
 
-  if (error || !data) return null;
+  if (data) {
+    return {
+      id: data.id,
+      fullName: data.full_name,
+      email: data.email,
+      createdAt: data.created_at,
+    };
+  }
+
+  // Profile missing (trigger didn't run) — create it now
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: newProfile, error: insertError } = await supabase
+    .from('profiles')
+    .insert({
+      id: user.id,
+      full_name: user.user_metadata?.full_name ?? '',
+      email: user.email ?? '',
+    })
+    .select()
+    .single();
+
+  if (insertError || !newProfile) return null;
 
   return {
-    id: data.id,
-    fullName: data.full_name,
-    email: data.email,
-    createdAt: data.created_at,
+    id: newProfile.id,
+    fullName: newProfile.full_name,
+    email: newProfile.email,
+    createdAt: newProfile.created_at,
   };
 }

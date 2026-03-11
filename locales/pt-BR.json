@@ -46,7 +46,9 @@
       "ageYears": "{{years}} ano",
       "ageYearsPlural": "{{years}} anos",
       "ageMonths": "{{months}} meses",
-      "ageYearsAndMonths": "{{years}} ano(s) e {{months}} mes(es)"
+      "ageYearsAndMonths": "{{years}} ano(s) e {{months}} mes(es)",
+      "reports": "Relatórios",
+      "viewReports": "Ver relatórios de {{name}}"
     },
     "addChild": {
       "title": "Nova criança",
@@ -74,6 +76,20 @@
       "sessionCreatedMessage": "A sessão foi gerada com sucesso.",
       "error": "Erro"
     },
+    "reports": {
+      "title": "Relatórios",
+      "back": "Voltar",
+      "noReports": "Nenhum relatório ainda.",
+      "noReportsHint": "Complete uma sessão para gerar o primeiro relatório.",
+      "selectChild": "Selecione uma criança para ver os relatórios.",
+      "skills": "Habilidades praticadas",
+      "bestActivity": "Melhor atividade",
+      "engagement": "Engajamento",
+      "recommendation": "Recomendação",
+      "engagementHigh": "Alto",
+      "engagementMedium": "Médio",
+      "engagementLow": "Baixo"
+    },
     "settings": {
       "title": "Configurações",
       "back": "Voltar",
@@ -86,6 +102,15 @@
       "logoutConfirmButton": "Sair",
       "cancel": "Cancelar",
       "version": "Versão"
+    }
+  },
+  "child": {
+    "session": {
+      "noActivities": "Nenhuma atividade encontrada",
+      "backToParent": "Voltar",
+      "greeting": "Olá {{name}}! Vamos brincar e aprender!",
+      "allDone": "Parabéns!",
+      "greatJob": "Você foi incrível!"
     }
   },
   "moods": {

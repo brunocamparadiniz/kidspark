@@ -250,6 +250,19 @@ export default function ParentDashboard() {
             />
           </View>
         )}
+
+        {/* Reports button */}
+        {selectedChild && (
+          <View style={styles.reportsSection}>
+            <Text style={styles.sectionTitle}>{t('parent.dashboard.reports')}</Text>
+            <Button
+              title={t('parent.dashboard.viewReports', { name: selectedChild.name })}
+              onPress={() => router.push('/(parent)/reports')}
+              variant="outline"
+              size="lg"
+            />
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -420,5 +433,8 @@ const styles = StyleSheet.create({
   },
   sessionSection: {
     marginTop: Spacing.xl,
+  },
+  reportsSection: {
+    marginTop: Spacing.lg,
   },
 });

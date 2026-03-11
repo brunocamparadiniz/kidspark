@@ -65,7 +65,8 @@ Return a JSON with this exact format:
       messages: [{ role: 'user', content: prompt }],
     })
 
-    const text = message.content[0].type === 'text' ? message.content[0].text : ''
+    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
+    const text = raw.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim()
     const parsed = JSON.parse(text)
 
     return new Response(JSON.stringify(parsed), {

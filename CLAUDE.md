@@ -11,51 +11,26 @@ A parent sets up a session in seconds; the AI creates and leads interactive acti
 
 **Problem it solves:** parents need time, kids will use screens anyway — this app makes screen time intentional, educational, and guilt-free.
 
-**Language:** The app must support Portuguese (pt-BR) and English (en). All user-facing strings must go through the i18n system (not yet implemented — see Phase 1.5). Default language: Portuguese.
+**Language:** The app supports Portuguese (pt-BR) and English (en). All user-facing strings go through the i18n system (i18next + react-i18next). Default language: detected from device locale, fallback English.
 
 ---
 
 ## Current State (March 2026)
 
 ### What's working
-- Expo project initialized with TypeScript + Expo Router (file-based routing)
-- Supabase client connected (auth + database) with AsyncStorage persistence
-- Login and registration screens — user can sign up and sign in
-- Parent dashboard with child list, child creation form, and session setup link
-- Setup session screen with duration/mood/goals selectors
-- Zustand stores for auth, child, and session state
-- Supabase Edge Functions scaffolded (generate-session, generate-report, transcribe-voice)
-- SQL migration with tables, RLS policies, and profile trigger
-- Path aliases (@/) configured in tsconfig
-- Shared UI components (Button, Card, Input)
-
-### Known Bugs — Fix These First
-
-1. **"Não autenticado" when adding a child**
-   - Location: `stores/child.store.ts` line 49 and `stores/session.store.ts` line 22
-   - Both use `supabase.auth.getUser()` which makes a network call to Supabase auth server
-   - Root cause is likely one of:
-     - (a) The `profiles` table has no INSERT policy — the migration only has SELECT and UPDATE policies. If the signup trigger fails silently, the profile row doesn't exist, and subsequent RLS checks that join on profiles may fail.
-     - (b) Email confirmation is required in Supabase but the redirect URL is misconfigured, so the user signs up but their email is never confirmed, meaning getUser() works but RLS treats them as unverified.
-   - Fix: Add a profile INSERT policy. Verify the trigger exists. Check if email confirmation is disabled or redirect URL is correct.
-
-2. **Email confirmation link broken** — opens "this site can't be reached"
-   - Supabase sends a confirmation link with the redirect URL from Dashboard > Authentication > URL Configuration
-   - Must be set to `kidspark://` (the scheme in app.json) for production, or `exp://192.168.x.x:8081` for local dev
-   - Quick fix: Disable email confirmation: Supabase Dashboard > Authentication > Providers > Email > turn off "Confirm email"
-
-3. **Birth date input is a raw text field** — expects YYYY-MM-DD typed manually
-   - Location: `app/(parent)/index.tsx` lines 159–167
-   - Replace with a proper date picker using `@react-native-community/datetimepicker` or a custom wheel/calendar picker
-   - Display format: DD/MM/YYYY (pt-BR) or MM/DD/YYYY (en)
-   - Default the picker to ~3 years ago (not today), since target age is 2–5
-
-### Issues in Edge Functions
-
-- `generate-session/index.ts` uses `model: 'claude-opus-4-6'` — change to `'claude-haiku-4-5-20251001'` to keep costs low
-- `generate-report/index.ts` also uses `'claude-opus-4-6'` — same fix
-- The `generate-session` edge function expects `{ config, childName }` but `session.store.ts` sends `{ sessionId, config }` — out of sync
-- No CORS headers on edge function responses
+- **Auth**: Login and registration with Supabase Auth + AsyncStorage persistence
+- **Parent dashboard**: Child list, child creation (DD/MM/YYYY date picker), session setup, reports link
+- **Session setup**: Duration/mood/goals selectors → AI generates activities via Edge Function
+- **Child session UI**: Full interactive session player with progress dots, activity transitions, celebration screen
+- **Activity types**: Story (auto-read + auto-advance), Song (lyric-by-lyric TTS + pop sound), Question (tappable elements + microphone), Drawing (finger-drawing canvas with color palette)
+- **Text-to-speech**: expo-speech integrated in all activities + session greeting
+- **Voice input**: Microphone recording → Whisper transcription via Edge Function (in Question activities)
+- **Reports**: Auto-generated after session completion, viewable per child with skills/engagement/recommendations
+- **i18n**: Full pt-BR and en support, language switcher in settings
+- **Settings screen**: Language switch + logout
+- **Edge Functions**: generate-session, generate-report, transcribe-voice — all deployed with CORS headers, Haiku model, markdown fence stripping
+- **State management**: Zustand stores for auth, child, session, reports
+- **Database**: RLS policies including profiles INSERT, profile creation trigger
 
 ---
 
@@ -69,10 +44,11 @@ A parent sets up a session in seconds; the AI creates and leads interactive acti
 | Navigation | Expo Router (file-based) | 6.0 |
 | AI — sessions | Anthropic Claude API (Haiku) | Via Supabase Edge Functions |
 | AI — voice | OpenAI Whisper API | Via Supabase Edge Functions |
-| i18n | i18next + react-i18next | NOT YET INSTALLED |
-| Styling | React Native StyleSheet | Used throughout (NativeWind planned but NOT installed) |
-
-Note: NativeWind was in the original plan but is NOT installed. The app uses React Native StyleSheet with a custom theme system (constants/themes.ts). Either install NativeWind now or continue with StyleSheet — don't mix.
+| TTS | expo-speech | ~14.0 |
+| Audio recording | expo-av | ~16.0 |
+| Drawing canvas | react-native-gesture-handler + react-native-svg | ~2.28 / 15.12 |
+| i18n | i18next + react-i18next + expo-localization | Installed |
+| Styling | React Native StyleSheet | Used throughout (NativeWind NOT used) |
 
 ---
 
@@ -85,36 +61,57 @@ kidspark/
 │   │   ├── _layout.tsx         # Stack, no header
 │   │   ├── login.tsx           # Email + password login
 │   │   └── register.tsx        # Name + email + password signup
+│   ├── (child)/
+│   │   ├── _layout.tsx         # Full screen, hidden StatusBar, child palette
+│   │   └── session.tsx         # Session player: greeting → activities → celebration
 │   ├── (parent)/
 │   │   ├── _layout.tsx         # Stack, no header
-│   │   ├── index.tsx           # Dashboard: children list, add child form, session link
-│   │   └── setup-session.tsx   # Duration, mood, goals selectors → creates session
-│   ├── _layout.tsx             # Root: initializes auth, loading spinner
+│   │   ├── index.tsx           # Dashboard: children list, add child, session + reports links
+│   │   ├── setup-session.tsx   # Duration, mood, goals → creates session → navigates to child
+│   │   ├── reports.tsx         # Reports per child: skills, engagement, recommendations
+│   │   └── settings.tsx        # Language switcher + logout
+│   ├── _layout.tsx             # Root: GestureHandlerRootView, initializes auth + i18n
 │   └── index.tsx               # Redirect: authenticated → (parent), else → (auth)/login
-├── components/shared/
-│   ├── Button.tsx              # primary/secondary/outline, sm/md/lg
-│   ├── Card.tsx                # Simple card wrapper
-│   └── Input.tsx               # Labeled text input
+├── assets/
+│   └── pop.wav                 # Pop sound for SongActivity tap feedback
+├── components/
+│   ├── child/
+│   │   ├── StoryActivity.tsx   # Auto-read pages with TTS, auto-advance after speech
+│   │   ├── SongActivity.tsx    # Lyric-by-lyric TTS, pop sound on tap, bouncing animation
+│   │   ├── QuestionActivity.tsx # Tappable elements/options, microphone recording, transcription
+│   │   └── DrawingActivity.tsx # Finger-drawing canvas with color palette, SVG paths
+│   └── shared/
+│       ├── Button.tsx          # primary/secondary/outline, sm/md/lg
+│       ├── Card.tsx            # Simple card wrapper
+│       └── Input.tsx           # Labeled text input
 ├── constants/
 │   ├── activity-types.ts       # ACTIVITY_TYPES, DURATION_OPTIONS, MOOD_OPTIONS, GOAL_OPTIONS
 │   └── themes.ts               # Colors (parent + child), Spacing, FontSizes, BorderRadius
 ├── hooks/
 │   ├── useAuth.ts              # Wraps auth store
 │   ├── useChildProfile.ts      # Fetches children on auth, wraps child store
-│   └── useSession.ts           # Wraps session store
+│   ├── useReports.ts           # Wraps report store
+│   └── useSession.ts           # Wraps session store (create, completeActivity, completeSession)
 ├── lib/
+│   ├── i18n.ts                 # i18next init with pt-BR + en, device locale detection
+│   ├── speech.ts               # TTS helper: speak(), stop(), isSpeaking() via expo-speech
 │   └── supabase.ts             # Supabase client with AsyncStorage
+├── locales/
+│   ├── en.json                 # English translations
+│   └── pt-BR.json              # Portuguese translations
 ├── stores/
 │   ├── auth.store.ts           # User, profile, signIn/signUp/signOut, onAuthStateChange
 │   ├── child.store.ts          # Children list, addChild, selectChild
-│   └── session.store.ts        # Create session → call edge function → save activities
+│   ├── report.store.ts         # Reports list, fetchReports, addReport
+│   └── session.store.ts        # Create session, completeActivity, completeSession → triggers report
 ├── supabase/
 │   ├── functions/
-│   │   ├── generate-session/index.ts
-│   │   ├── generate-report/index.ts
-│   │   └── transcribe-voice/index.ts
+│   │   ├── generate-session/index.ts  # Claude Haiku → activity JSON, CORS, fence stripping
+│   │   ├── generate-report/index.ts   # Claude Haiku → development report, language-aware
+│   │   └── transcribe-voice/index.ts  # OpenAI Whisper → text transcription
 │   └── migrations/
-│       └── 001_initial_schema.sql
+│       ├── 001_initial_schema.sql
+│       └── 002_fix_profiles_insert_policy.sql
 ├── types/index.ts              # Profile, Child, Session, Activity, DevelopmentReport
 ├── app.json                    # scheme: "kidspark"
 ├── package.json
@@ -122,40 +119,19 @@ kidspark/
 └── CLAUDE.md
 ```
 
-### Files that DON'T exist yet
-- `app/(child)/` — child session UI (Phase 3)
-- `app/(parent)/reports.tsx` — reports screen (Phase 4)
-- `app/(parent)/settings.tsx` — settings + language switch (Phase 1.5)
-- `lib/i18n.ts` + `locales/` — i18n system (Phase 1.5)
-- `lib/session-engine.ts` — session orchestration (Phase 2)
-
 ---
 
 ## Database (Supabase / Postgres)
 
-### Tables (from 001_initial_schema.sql)
+### Tables (from migrations)
 
 profiles, children, sessions, session_activities, development_reports — all with RLS enabled.
 
-### MISSING: profiles INSERT policy
-
-The migration only has SELECT + UPDATE for profiles. Add:
-
-```sql
-CREATE POLICY "Users can insert own profile"
-  ON profiles FOR INSERT
-  WITH CHECK (auth.uid() = id);
-```
+The profiles INSERT policy was added in `002_fix_profiles_insert_policy.sql`.
 
 ### Profile creation trigger
 
-The migration includes `handle_new_user()` that auto-creates a profile on signup (SECURITY DEFINER). Verify it exists:
-
-```sql
-SELECT * FROM profiles;
-```
-
-If empty after signup, re-run the trigger SQL in Supabase SQL Editor.
+The migration includes `handle_new_user()` that auto-creates a profile on signup (SECURITY DEFINER).
 
 ### Column name mapping (DB snake_case → TS camelCase)
 
@@ -181,40 +157,6 @@ API keys must NEVER be in client code. All AI calls go through Edge Functions.
 
 ---
 
-## i18n Strategy (Phase 1.5 — not yet implemented)
-
-Install: `npm install i18next react-i18next expo-localization`
-
-```typescript
-// lib/i18n.ts
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import * as Localization from 'expo-localization';
-import ptBR from '@/locales/pt-BR.json';
-import en from '@/locales/en.json';
-
-i18n.use(initReactI18next).init({
-  resources: {
-    'pt-BR': { translation: ptBR },
-    en: { translation: en },
-  },
-  lng: Localization.locale.startsWith('pt') ? 'pt-BR' : 'en',
-  fallbackLng: 'en',
-  interpolation: { escapeValue: false },
-});
-
-export default i18n;
-```
-
-All user-facing strings use t():
-```typescript
-import { useTranslation } from 'react-i18next';
-const { t } = useTranslation();
-// t('parent.dashboard.title'), t('auth.login.button')
-```
-
----
-
 ## Session Engine Flow
 
 ```
@@ -222,36 +164,21 @@ Parent configures session (setup-session.tsx)
       ↓
 session.store.ts creates session row in Supabase
       ↓
-session.store.ts calls Edge Function (generate-session)
+session.store.ts calls Edge Function (generate-session) with config + childName + language
       ↓
 Edge Function calls Claude Haiku with structured prompt
       ↓
-Claude returns activity list as JSON
+Claude returns activity list as JSON (markdown fences stripped before parse)
       ↓
 session.store.ts saves activities to session_activities table
       ↓
-Child UI renders activities one by one (Phase 3)
+Router navigates to (child)/session.tsx
       ↓
-Engagement measured by interaction time (Phase 3)
+Child UI renders greeting → activities one by one → celebration
       ↓
-generate-report Edge Function creates dev report (Phase 4)
-```
-
-### Prompt template
-
-```typescript
-const SESSION_SYSTEM_PROMPT = `
-You are an expert educator in child development for ages 2–5.
-Create interactive, playful learning sessions.
-
-Rules:
-- Always return valid JSON, no markdown, no extra text
-- Each activity: 2–5 minutes
-- Simple language, short sentences, positivity
-- Vary activity types for engagement
-- Adapt to mood (energetic = structure, sleepy = calm)
-- Respond in the language specified in "language" field
-`;
+completeSession() triggers generate-report Edge Function in background
+      ↓
+Report saved to development_reports table, viewable in (parent)/reports.tsx
 ```
 
 ---
@@ -265,7 +192,7 @@ Rules:
 - Always handle errors: `const { data, error } = ...; if (error) { ... }`
 - Comments explain "why", not "what"
 - Imports via `@/`
-- i18n: once implemented, all strings via t()
+- All user-facing strings via i18n t()
 - Supabase: always destructure { data, error } and handle both
 
 ---
@@ -276,9 +203,10 @@ Rules:
 - White bg (#FFFFFF), dark primary (#1A1A2E), warm accent (#E8874A), surface (#F5F5F7)
 - Rounded corners (8–16px), spacing multiples of 8
 
-### Child Mode (Phase 3)
+### Child Mode
 - Full screen, bright colors: coral (#FF6B6B), teal (#4ECDC4), yellow (#FFE66D)
-- Large touch targets (44x44 min), no text — icons/voice only
+- Large touch targets (44x44 min), icons + voice, minimal text
+- TTS reads all content aloud, auto-advance where appropriate
 
 ---
 
@@ -293,32 +221,45 @@ Rules:
 - [x] Stores + hooks + shared components
 - [x] Edge Functions scaffolded
 
-### Phase 1.5 — Stabilization (CURRENT)
-- [ ] Fix "Não autenticado" (profiles INSERT policy + verify trigger + email config)
-- [ ] Fix email confirmation (disable or fix redirect)
-- [ ] Replace birth date TextInput with proper date picker
-- [ ] Add i18n (i18next + locales + language switcher)
-- [ ] Create settings screen (language + logout)
-- [ ] Fix Edge Functions: model → Haiku, fix payload mismatch, add CORS
-- [ ] Test full flow: register → login → add child → setup session
+### Phase 1.5 — Stabilization (DONE)
+- [x] Fix "Não autenticado" (profiles INSERT policy + verify trigger + email config)
+- [x] Fix email confirmation (disable in Supabase Dashboard)
+- [x] Replace birth date TextInput with DD/MM/YYYY split input
+- [x] Add i18n (i18next + locales + language switcher)
+- [x] Create settings screen (language + logout)
+- [x] Fix Edge Functions: model → Haiku, fix payload mismatch, add CORS
+- [x] Test full flow: register → login → add child → setup session
 
-### Phase 2 — Session Engine
-- [ ] Deploy generate-session Edge Function
-- [ ] Wire session store → edge function → save activities
-- [ ] Session player screen (basic)
+### Phase 2 — Session Engine (DONE)
+- [x] Deploy generate-session Edge Function
+- [x] Wire session store → edge function → save activities
+- [x] Pass i18n language to edge function
 
-### Phase 3 — Child UI
-- [ ] app/(child)/ screens
-- [ ] Activity renderers per type
-- [ ] Engagement measurement + animations
+### Phase 3 — Child UI (DONE)
+- [x] app/(child)/ layout + session player
+- [x] Activity renderers: Story, Song, Question, Drawing
+- [x] Interactive elements: finger-drawing canvas, tappable question options, pop sound
+- [x] Progress dots, fade transitions, celebration screen with stars
 
-### Phase 4 — Reports
-- [ ] Deploy generate-report Edge Function
-- [ ] Reports screen
+### Phase 4 — Reports (DONE)
+- [x] Report auto-generated after session completion (background)
+- [x] Reports screen with skills, engagement, recommendations
+- [x] Report store + hook
+- [x] Navigation from parent dashboard
 
-### Phase 5 — Voice
-- [ ] Deploy transcribe-voice Edge Function
-- [ ] Microphone + voice activities
+### Phase 5 — Voice (DONE)
+- [x] expo-speech TTS in all activities + session greeting
+- [x] Microphone recording in QuestionActivity
+- [x] Whisper transcription via Edge Function
+- [x] Auto-advance stories after speech finishes
+
+### Phase 6 — Polish Pass (CURRENT)
+- [ ] Onboarding flow for first-time users
+- [ ] Offline handling / error states for network failures
+- [ ] Loading skeletons and better loading states
+- [ ] Accessibility audit (screen reader labels, contrast ratios)
+- [ ] App icon and splash screen design
+- [ ] End-to-end testing on physical device
 
 ---
 
@@ -337,11 +278,10 @@ Rules:
 ## When Starting a New Task
 
 1. Read this CLAUDE.md
-2. We're in Phase 1.5 — Stabilization
+2. We're in Phase 6 — Polish Pass
 3. Work through the phase checklist in order
 4. Verify changes work end-to-end
-5. Don't skip phases
-6. Read existing files before modifying
+5. Read existing files before modifying
 
 ---
 

@@ -46,7 +46,9 @@
       "ageYears": "{{years}} year",
       "ageYearsPlural": "{{years}} years",
       "ageMonths": "{{months}} months",
-      "ageYearsAndMonths": "{{years}} year(s) and {{months}} month(s)"
+      "ageYearsAndMonths": "{{years}} year(s) and {{months}} month(s)",
+      "reports": "Reports",
+      "viewReports": "View reports for {{name}}"
     },
     "addChild": {
       "title": "New child",
@@ -74,6 +76,20 @@
       "sessionCreatedMessage": "The session was generated successfully.",
       "error": "Error"
     },
+    "reports": {
+      "title": "Reports",
+      "back": "Back",
+      "noReports": "No reports yet.",
+      "noReportsHint": "Complete a session to generate the first report.",
+      "selectChild": "Select a child to view reports.",
+      "skills": "Skills practiced",
+      "bestActivity": "Best activity",
+      "engagement": "Engagement",
+      "recommendation": "Recommendation",
+      "engagementHigh": "High",
+      "engagementMedium": "Medium",
+      "engagementLow": "Low"
+    },
     "settings": {
       "title": "Settings",
       "back": "Back",
@@ -86,6 +102,15 @@
       "logoutConfirmButton": "Log out",
       "cancel": "Cancel",
       "version": "Version"
+    }
+  },
+  "child": {
+    "session": {
+      "noActivities": "No activities found",
+      "backToParent": "Go back",
+      "greeting": "Hi {{name}}! Let's play and learn!",
+      "allDone": "Well done!",
+      "greatJob": "You were amazing!"
     }
   },
   "moods": {

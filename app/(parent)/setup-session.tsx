@@ -56,8 +56,7 @@ export default function SetupSessionScreen() {
       return;
     }
 
-    Alert.alert(t('parent.setupSession.sessionCreated'), t('parent.setupSession.sessionCreatedMessage'));
-    router.back();
+    router.replace('/(child)/session');
   }
 
   return (
