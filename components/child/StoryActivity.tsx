@@ -5,16 +5,29 @@ import { speak, stop } from '@/lib/speech';
 
 interface StoryContent {
   text?: string;
-  pages?: string[];
+  pages?: unknown[];
 }
 
 interface StoryActivityProps {
   content: StoryContent;
   onComplete: () => void;
+  activityTitle?: string;
 }
 
-export function StoryActivity({ content, onComplete }: StoryActivityProps) {
-  const pages = content.pages ?? (content.text ? [content.text] : []);
+function normalizePage(page: unknown): string {
+  if (typeof page === 'string') return page;
+  if (page && typeof page === 'object') {
+    const obj = page as Record<string, unknown>;
+    if (typeof obj.text === 'string') return obj.text;
+    if (typeof obj.page === 'string') return obj.page;
+    return JSON.stringify(obj);
+  }
+  return String(page);
+}
+
+export function StoryActivity({ content, onComplete, activityTitle }: StoryActivityProps) {
+  const rawPages = content.pages ?? (content.text ? [content.text] : (activityTitle ? [activityTitle] : []));
+  const pages = rawPages.map(normalizePage).filter((p) => p.trim());
   const [pageIndex, setPageIndex] = useState(0);
   const [autoMode, setAutoMode] = useState(false);
   const [speaking, setSpeaking] = useState(false);

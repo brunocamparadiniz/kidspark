@@ -6,10 +6,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   Animated,
+  ScrollView,
 } from 'react-native';
 import { Audio } from 'expo-av';
 import { Colors, Spacing, FontSizes } from '@/constants/themes';
 import { speak, stop } from '@/lib/speech';
+import { lightImpact } from '@/lib/haptics';
 
 interface SongContent {
   lyrics?: string;
@@ -19,10 +21,14 @@ interface SongContent {
 interface SongActivityProps {
   content: SongContent;
   onComplete: () => void;
+  activityTitle?: string;
 }
 
-export function SongActivity({ content, onComplete }: SongActivityProps) {
-  const lines = (content.lyrics ?? '').split('\n').filter((l) => l.trim());
+export function SongActivity({ content, onComplete, activityTitle }: SongActivityProps) {
+  const lyricsSource = (typeof content.lyrics === 'string' && content.lyrics.trim())
+    ? content.lyrics
+    : activityTitle ?? '';
+  const lines = lyricsSource.split('\n').filter((l) => l.trim());
   const [currentLine, setCurrentLine] = useState(0);
   const [songDone, setSongDone] = useState(false);
   const isFast = content.rhythm === 'fast';
@@ -39,12 +45,16 @@ export function SongActivity({ content, onComplete }: SongActivityProps) {
     let mounted = true;
     async function loadSound() {
       try {
+        // Required for sound playback on iOS (especially in silent mode)
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+        });
         const { sound } = await Audio.Sound.createAsync(
           require('../../assets/pop.wav'),
         );
         if (mounted) soundRef.current = sound;
-      } catch {
-        // silent fallback
+      } catch (err) {
+        console.warn('[SongActivity] Failed to load pop sound:', err);
       }
     }
     loadSound();
@@ -107,13 +117,17 @@ export function SongActivity({ content, onComplete }: SongActivityProps) {
   }, []);
 
   const handleTap = useCallback(async () => {
+    lightImpact();
     try {
       if (soundRef.current) {
-        await soundRef.current.setPositionAsync(0);
-        await soundRef.current.playAsync();
+        const status = await soundRef.current.getStatusAsync();
+        if (status.isLoaded) {
+          await soundRef.current.setPositionAsync(0);
+          await soundRef.current.playAsync();
+        }
       }
-    } catch {
-      // silent fallback
+    } catch (err) {
+      console.warn('[SongActivity] Pop sound playback failed:', err);
     }
 
     Animated.sequence([
@@ -149,7 +163,7 @@ export function SongActivity({ content, onComplete }: SongActivityProps) {
           <Text style={styles.noteIcon}>🎵</Text>
         </Animated.View>
 
-        <View style={styles.lyricsContainer}>
+        <ScrollView style={styles.lyricsScroll} contentContainerStyle={styles.lyricsContainer} bounces={false}>
           {lines.map((line, i) => (
             <Animated.Text
               key={i}
@@ -162,7 +176,7 @@ export function SongActivity({ content, onComplete }: SongActivityProps) {
               {line}
             </Animated.Text>
           ))}
-        </View>
+        </ScrollView>
 
         <View style={styles.rhythmRow}>
           <Text style={styles.rhythmLabel}>{isFast ? '🏃💨' : '🐢✨'}</Text>
@@ -191,11 +205,15 @@ const styles = StyleSheet.create({
   noteIcon: {
     fontSize: 64,
   },
-  lyricsContainer: {
+  lyricsScroll: {
     flex: 1,
-    justifyContent: 'center',
     width: '100%',
+  },
+  lyricsContainer: {
+    justifyContent: 'center',
+    flexGrow: 1,
     gap: Spacing.md,
+    paddingVertical: Spacing.md,
   },
   lyricLine: {
     fontSize: FontSizes.xl,

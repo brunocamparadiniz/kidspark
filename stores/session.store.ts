@@ -26,7 +26,7 @@ export const useSessionStore = create<SessionState>((set) => ({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       set({ isLoading: false });
-      return { error: 'Não autenticado' };
+      return { error: i18n.t('parent.errors.notAuthenticated') };
     }
 
     // Create session row
@@ -45,13 +45,13 @@ export const useSessionStore = create<SessionState>((set) => ({
 
     if (sessionError || !sessionRow) {
       set({ isLoading: false });
-      return { error: sessionError?.message ?? 'Erro ao criar sessão' };
+      return { error: sessionError?.message ?? i18n.t('parent.errors.sessionCreateFailed') };
     }
 
     // Get child name for the edge function prompt
     const childState = useChildStore.getState();
     const child = childState.children.find((c) => c.id === config.childId);
-    const childName = child?.name ?? 'Crianca';
+    const childName = child?.name ?? '';
 
     // Call Edge Function to generate activities
     const { data: generatedData, error: fnError } = await supabase.functions.invoke(
@@ -172,6 +172,7 @@ export const useSessionStore = create<SessionState>((set) => ({
     });
 
     // Generate development report in the background
+    useReportStore.getState().setGenerating(true);
     supabase.functions
       .invoke('generate-report', { body: { sessionId: session.id, language: i18n.language } })
       .then(({ data }) => {
@@ -189,6 +190,9 @@ export const useSessionStore = create<SessionState>((set) => ({
       })
       .catch(() => {
         // Report generation failed silently — parent can refresh later
+      })
+      .finally(() => {
+        useReportStore.getState().setGenerating(false);
       });
   },
 

@@ -17,6 +17,7 @@ import { SongActivity } from '@/components/child/SongActivity';
 import { QuestionActivity } from '@/components/child/QuestionActivity';
 import { DrawingActivity } from '@/components/child/DrawingActivity';
 import { speak, stop } from '@/lib/speech';
+import { lightImpact, successNotification } from '@/lib/haptics';
 import type { Activity, ActivityType } from '@/types';
 
 const ACTIVITY_COLORS: Record<ActivityType, string> = {
@@ -58,6 +59,7 @@ export default function SessionScreen() {
   // Celebration animation
   useEffect(() => {
     if (finished) {
+      successNotification();
       const celebText = t('child.session.allDone');
       speak(celebText);
       Animated.spring(celebrationScale, {
@@ -89,6 +91,7 @@ export default function SessionScreen() {
   async function handleActivityComplete() {
     if (!current) return;
 
+    lightImpact();
     stop();
     await completeActivity(current.id);
 
@@ -186,16 +189,17 @@ export default function SessionScreen() {
 
 function renderActivity(activity: Activity, onComplete: () => void) {
   const content = activity.content as Record<string, unknown>;
+  const title = activity.title;
 
   switch (activity.type) {
     case 'story':
-      return <StoryActivity content={content} onComplete={onComplete} />;
+      return <StoryActivity content={content} onComplete={onComplete} activityTitle={title} />;
     case 'song':
-      return <SongActivity content={content} onComplete={onComplete} />;
+      return <SongActivity content={content} onComplete={onComplete} activityTitle={title} />;
     case 'question':
-      return <QuestionActivity content={content} onComplete={onComplete} />;
+      return <QuestionActivity content={content} onComplete={onComplete} activityTitle={title} />;
     case 'drawing':
-      return <DrawingActivity content={content} onComplete={onComplete} />;
+      return <DrawingActivity content={content} onComplete={onComplete} activityTitle={title} />;
     case 'minigame':
       return (
         <QuestionActivity
@@ -207,6 +211,7 @@ function renderActivity(activity: Activity, onComplete: () => void) {
             answer: content.answer as string | undefined,
           }}
           onComplete={onComplete}
+          activityTitle={title}
         />
       );
     default:
@@ -231,9 +236,10 @@ const styles = StyleSheet.create({
   progressRow: {
     flexDirection: 'row',
     justifyContent: 'center',
+    flexWrap: 'wrap',
     gap: Spacing.sm,
-    paddingTop: Spacing.xxl + Spacing.md,
-    paddingBottom: Spacing.md,
+    paddingTop: Spacing.xxl + Spacing.lg,
+    paddingBottom: Spacing.sm,
     paddingHorizontal: Spacing.md,
   },
   progressDot: {

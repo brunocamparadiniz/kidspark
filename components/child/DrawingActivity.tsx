@@ -4,6 +4,7 @@ import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Svg, { Path } from 'react-native-svg';
 import { Colors, Spacing, FontSizes, BorderRadius } from '@/constants/themes';
 import { speak, stop } from '@/lib/speech';
+import { lightImpact } from '@/lib/haptics';
 
 interface DrawingContent {
   prompt?: string;
@@ -13,6 +14,7 @@ interface DrawingContent {
 interface DrawingActivityProps {
   content: DrawingContent;
   onComplete: () => void;
+  activityTitle?: string;
 }
 
 interface StrokePath {
@@ -22,19 +24,33 @@ interface StrokePath {
 
 const DEFAULT_COLORS = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A78BFA', '#6BCB77', '#4D96FF'];
 
-export function DrawingActivity({ content, onComplete }: DrawingActivityProps) {
-  const colors = content.colors ?? DEFAULT_COLORS;
+const COLOR_MAP: Record<string, string> = {
+  red: '#FF6B6B', blue: '#4D96FF', green: '#6BCB77', yellow: '#FFE66D',
+  purple: '#A78BFA', orange: '#FF9F43', pink: '#FF69B4', black: '#2D3436',
+  white: '#FFFFFF', teal: '#4ECDC4', vermelho: '#FF6B6B', azul: '#4D96FF',
+  verde: '#6BCB77', amarelo: '#FFE66D', roxo: '#A78BFA', laranja: '#FF9F43',
+  rosa: '#FF69B4', preto: '#2D3436', branco: '#FFFFFF',
+};
+
+function normalizeColor(c: string): string {
+  if (c.startsWith('#')) return c;
+  return COLOR_MAP[c.toLowerCase()] ?? c;
+}
+
+export function DrawingActivity({ content, onComplete, activityTitle }: DrawingActivityProps) {
+  const drawingPrompt = content.prompt || activityTitle || '';
+  const colors = (content.colors ?? DEFAULT_COLORS).map(normalizeColor);
   const [selectedColor, setSelectedColor] = useState(colors[0]);
   const [paths, setPaths] = useState<StrokePath[]>([]);
   const [currentPath, setCurrentPath] = useState('');
 
   // Speak the prompt on mount
   useEffect(() => {
-    if (content.prompt) {
-      speak(content.prompt);
+    if (drawingPrompt) {
+      speak(drawingPrompt);
     }
     return () => stop();
-  }, [content.prompt]);
+  }, [drawingPrompt]);
 
   const panGesture = Gesture.Pan()
     .minDistance(0)
@@ -57,6 +73,7 @@ export function DrawingActivity({ content, onComplete }: DrawingActivityProps) {
   }, []);
 
   function handleComplete() {
+    lightImpact();
     stop();
     onComplete();
   }
@@ -65,7 +82,7 @@ export function DrawingActivity({ content, onComplete }: DrawingActivityProps) {
     <View style={styles.container}>
       <View style={styles.promptBubble}>
         <Text style={styles.promptIcon}>🎨</Text>
-        <Text style={styles.promptText}>{content.prompt ?? ''}</Text>
+        <Text style={styles.promptText}>{drawingPrompt}</Text>
       </View>
 
       <GestureDetector gesture={panGesture}>

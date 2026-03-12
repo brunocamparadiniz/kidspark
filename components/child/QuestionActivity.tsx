@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
 import { Audio } from 'expo-av';
 import { Colors, Spacing, FontSizes, BorderRadius } from '@/constants/themes';
 import { speak, stop } from '@/lib/speech';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import i18n from '@/lib/i18n';
+import { lightImpact, mediumImpact } from '@/lib/haptics';
 
 interface QuestionContent {
   question?: string;
@@ -17,6 +19,7 @@ interface QuestionContent {
 interface QuestionActivityProps {
   content: QuestionContent;
   onComplete: () => void;
+  activityTitle?: string;
 }
 
 const ELEMENT_COLORS = [
@@ -28,7 +31,8 @@ const ELEMENT_COLORS = [
   Colors.child.orange,
 ];
 
-export function QuestionActivity({ content, onComplete }: QuestionActivityProps) {
+export function QuestionActivity({ content, onComplete, activityTitle }: QuestionActivityProps) {
+  const { t } = useTranslation();
   const [showHint, setShowHint] = useState(false);
   const [tappedIndex, setTappedIndex] = useState<number | null>(null);
   const [correctIndex, setCorrectIndex] = useState<number | null>(null);
@@ -46,13 +50,15 @@ export function QuestionActivity({ content, onComplete }: QuestionActivityProps)
   const hasOptions = Array.isArray(content.options) && content.options.length > 0;
   const isInteractive = hasElements || hasOptions;
 
+  const displayQuestion = content.question || activityTitle || '';
+
   // Speak question on mount
   useEffect(() => {
-    if (content.question) {
-      speak(content.question);
+    if (displayQuestion) {
+      speak(displayQuestion);
     }
     return () => stop();
-  }, [content.question]);
+  }, [displayQuestion]);
 
   // Pulsing mic animation when recording
   useEffect(() => {
@@ -78,8 +84,8 @@ export function QuestionActivity({ content, onComplete }: QuestionActivityProps)
 
     if (isCorrect) {
       setCorrectIndex(index);
-      const isPt = i18n.language.startsWith('pt');
-      speak(isPt ? 'Muito bem!' : 'Great job!');
+      mediumImpact();
+      speak(t('child.session.correctAnswer'));
 
       Animated.sequence([
         Animated.spring(bounceAnim, { toValue: 1.3, friction: 3, tension: 100, useNativeDriver: true }),
@@ -176,107 +182,115 @@ export function QuestionActivity({ content, onComplete }: QuestionActivityProps)
     const items = hasOptions ? content.options! : content.elements!;
 
     return (
-      <Animated.View style={[styles.container, { backgroundColor: flashBg }]}>
-        <Text style={styles.questionIcon}>🤔</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
+        <Animated.View style={[styles.container, { backgroundColor: flashBg }]}>
+          <Text style={styles.questionIcon}>🤔</Text>
 
-        <View style={styles.bubble}>
-          <Text style={styles.questionText}>{content.question ?? ''}</Text>
-        </View>
+          <View style={styles.bubble}>
+            <Text style={styles.questionText}>{displayQuestion}</Text>
+          </View>
 
-        <View style={styles.elementsGrid}>
-          {items.map((item, i) => {
-            const isCorrectItem = correctIndex === i;
-            const color = ELEMENT_COLORS[i % ELEMENT_COLORS.length];
+          <View style={styles.elementsGrid}>
+            {items.map((item, i) => {
+              const isCorrectItem = correctIndex === i;
+              const color = ELEMENT_COLORS[i % ELEMENT_COLORS.length];
 
-            return (
-              <Animated.View
-                key={i}
-                style={isCorrectItem ? { transform: [{ scale: bounceAnim }] } : undefined}
-              >
-                <TouchableOpacity
-                  style={[
-                    styles.elementCircle,
-                    { backgroundColor: color },
-                    isCorrectItem && styles.elementCorrect,
-                    tappedIndex === i && !isCorrectItem && styles.elementWrong,
-                  ]}
-                  onPress={() => handleElementTap(i, item)}
-                  activeOpacity={0.7}
-                  disabled={tappedIndex !== null && correctIndex !== null}
+              return (
+                <Animated.View
+                  key={i}
+                  style={isCorrectItem ? { transform: [{ scale: bounceAnim }] } : undefined}
                 >
-                  <Text style={styles.elementText}>{item}</Text>
-                </TouchableOpacity>
-              </Animated.View>
-            );
-          })}
-        </View>
+                  <TouchableOpacity
+                    style={[
+                      styles.elementCircle,
+                      { backgroundColor: color },
+                      isCorrectItem && styles.elementCorrect,
+                      tappedIndex === i && !isCorrectItem && styles.elementWrong,
+                    ]}
+                    onPress={() => handleElementTap(i, item)}
+                    activeOpacity={0.7}
+                    disabled={tappedIndex !== null && correctIndex !== null}
+                  >
+                    <Text style={styles.elementText}>{item}</Text>
+                  </TouchableOpacity>
+                </Animated.View>
+              );
+            })}
+          </View>
 
-        {correctIndex !== null && (
-          <Text style={styles.celebrationText}>🎉</Text>
-        )}
-      </Animated.View>
+          {correctIndex !== null && (
+            <Text style={styles.celebrationText}>🎉</Text>
+          )}
+        </Animated.View>
+      </ScrollView>
     );
   }
 
   // Fallback: text question with hint + microphone
   return (
-    <View style={styles.container}>
-      <Text style={styles.questionIcon}>🤔</Text>
+    <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
+      <View style={styles.container}>
+        <Text style={styles.questionIcon}>🤔</Text>
 
-      <View style={styles.bubble}>
-        <Text style={styles.questionText}>{content.question ?? ''}</Text>
+        <View style={styles.bubble}>
+          <Text style={styles.questionText}>{displayQuestion}</Text>
+        </View>
+
+        {content.hint && !showHint && (
+          <TouchableOpacity
+            style={styles.hintButton}
+            onPress={() => setShowHint(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.hintButtonIcon}>💡</Text>
+            <Text style={styles.hintButtonText}>?</Text>
+          </TouchableOpacity>
+        )}
+
+        {showHint && (
+          <View style={styles.hintBubble}>
+            <Text style={styles.hintText}>{content.hint}</Text>
+          </View>
+        )}
+
+        {/* Microphone button */}
+        <Animated.View style={{ transform: [{ scale: micPulse }] }}>
+          <TouchableOpacity
+            style={[styles.micButton, isRecording && styles.micButtonRecording]}
+            onPress={handleMicPress}
+            activeOpacity={0.7}
+            disabled={isTranscribing}
+          >
+            <Text style={styles.micIcon}>{isRecording ? '⏹️' : isTranscribing ? '⏳' : '🎤'}</Text>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {isRecording && <Text style={styles.recordingDot}>🔴</Text>}
+
+        {transcribedText !== '' && (
+          <View style={styles.transcriptBubble}>
+            <Text style={styles.transcriptText}>"{transcribedText}"</Text>
+          </View>
+        )}
+
+        <TouchableOpacity style={styles.doneButton} onPress={() => { lightImpact(); stop(); onComplete(); }} activeOpacity={0.7}>
+          <Text style={styles.doneIcon}>✅</Text>
+        </TouchableOpacity>
       </View>
-
-      {content.hint && !showHint && (
-        <TouchableOpacity
-          style={styles.hintButton}
-          onPress={() => setShowHint(true)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.hintButtonIcon}>💡</Text>
-          <Text style={styles.hintButtonText}>?</Text>
-        </TouchableOpacity>
-      )}
-
-      {showHint && (
-        <View style={styles.hintBubble}>
-          <Text style={styles.hintText}>{content.hint}</Text>
-        </View>
-      )}
-
-      {/* Microphone button */}
-      <Animated.View style={{ transform: [{ scale: micPulse }] }}>
-        <TouchableOpacity
-          style={[styles.micButton, isRecording && styles.micButtonRecording]}
-          onPress={handleMicPress}
-          activeOpacity={0.7}
-          disabled={isTranscribing}
-        >
-          <Text style={styles.micIcon}>{isRecording ? '⏹️' : isTranscribing ? '⏳' : '🎤'}</Text>
-        </TouchableOpacity>
-      </Animated.View>
-
-      {isRecording && <Text style={styles.recordingDot}>🔴</Text>}
-
-      {transcribedText !== '' && (
-        <View style={styles.transcriptBubble}>
-          <Text style={styles.transcriptText}>"{transcribedText}"</Text>
-        </View>
-      )}
-
-      <TouchableOpacity style={styles.doneButton} onPress={() => { stop(); onComplete(); }} activeOpacity={0.7}>
-        <Text style={styles.doneIcon}>✅</Text>
-      </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
     gap: Spacing.lg,
   },
   questionIcon: {

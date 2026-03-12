@@ -15,6 +15,8 @@ interface ReportRow {
 interface ReportState {
   reports: DevelopmentReport[];
   isLoading: boolean;
+  isGenerating: boolean;
+  setGenerating: (val: boolean) => void;
   fetchReports: (childId: string) => Promise<void>;
   addReport: (report: DevelopmentReport) => void;
 }
@@ -22,6 +24,8 @@ interface ReportState {
 export const useReportStore = create<ReportState>((set) => ({
   reports: [],
   isLoading: false,
+  isGenerating: false,
+  setGenerating: (val) => set({ isGenerating: val }),
 
   fetchReports: async (childId) => {
     set({ isLoading: true });

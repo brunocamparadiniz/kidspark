@@ -28,7 +28,7 @@ const SKILL_COLORS = [
 export default function ReportsScreen() {
   const { t } = useTranslation();
   const { selectedChild } = useChildProfile();
-  const { reports, isLoading, fetchReports } = useReports();
+  const { reports, isLoading, isGenerating, fetchReports } = useReports();
 
   useEffect(() => {
     if (selectedChild) {
@@ -104,8 +104,17 @@ export default function ReportsScreen() {
           </View>
         )}
 
+        {/* Generating indicator */}
+        {selectedChild && !isLoading && isGenerating && (
+          <Card style={styles.emptyCard}>
+            <ActivityIndicator size="small" color={Colors.parent.accent} style={{ marginBottom: Spacing.sm }} />
+            <Text style={styles.emptyTitle}>{t('parent.reports.generating')}</Text>
+            <Text style={styles.emptyHint}>{t('parent.reports.generatingHint')}</Text>
+          </Card>
+        )}
+
         {/* Empty state */}
-        {selectedChild && !isLoading && reports.length === 0 && (
+        {selectedChild && !isLoading && !isGenerating && reports.length === 0 && (
           <Card style={styles.emptyCard}>
             <Text style={styles.emptyIcon}>📊</Text>
             <Text style={styles.emptyTitle}>{t('parent.reports.noReports')}</Text>

@@ -34,6 +34,7 @@
   "parent": {
     "dashboard": {
       "greeting": "Hello, {{name}}!",
+      "defaultName": "Parent",
       "subtitle": "Parent dashboard",
       "logout": "Logout",
       "children": "Children",
@@ -59,6 +60,10 @@
       "add": "Add",
       "fillFields": "Fill in name and date of birth",
       "invalidDate": "Invalid date"
+    },
+    "errors": {
+      "notAuthenticated": "Not authenticated",
+      "sessionCreateFailed": "Failed to create session"
     },
     "setupSession": {
       "back": "Back",
@@ -88,7 +93,9 @@
       "recommendation": "Recommendation",
       "engagementHigh": "High",
       "engagementMedium": "Medium",
-      "engagementLow": "Low"
+      "engagementLow": "Low",
+      "generating": "Generating report...",
+      "generatingHint": "The AI is analyzing the session. This may take a moment."
     },
     "settings": {
       "title": "Settings",
@@ -110,7 +117,8 @@
       "backToParent": "Go back",
       "greeting": "Hi {{name}}! Let's play and learn!",
       "allDone": "Well done!",
-      "greatJob": "You were amazing!"
+      "greatJob": "You were amazing!",
+      "correctAnswer": "Great job!"
     }
   },
   "moods": {

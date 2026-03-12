@@ -102,7 +102,7 @@ export default function ParentDashboard() {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>
-              {t('parent.dashboard.greeting', { name: profile?.fullName?.split(' ')[0] ?? 'Pai' })}
+              {t('parent.dashboard.greeting', { name: profile?.fullName?.split(' ')[0] ?? t('parent.dashboard.defaultName') })}
             </Text>
             <Text style={styles.headerSubtitle}>{t('parent.dashboard.subtitle')}</Text>
           </View>

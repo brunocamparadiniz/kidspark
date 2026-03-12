@@ -34,6 +34,7 @@
   "parent": {
     "dashboard": {
       "greeting": "Olá, {{name}}!",
+      "defaultName": "Pai",
       "subtitle": "Painel dos pais",
       "logout": "Sair",
       "children": "Crianças",
@@ -59,6 +60,10 @@
       "add": "Adicionar",
       "fillFields": "Preencha nome e data de nascimento",
       "invalidDate": "Data inválida"
+    },
+    "errors": {
+      "notAuthenticated": "Não autenticado",
+      "sessionCreateFailed": "Erro ao criar sessão"
     },
     "setupSession": {
       "back": "Voltar",
@@ -88,7 +93,9 @@
       "recommendation": "Recomendação",
       "engagementHigh": "Alto",
       "engagementMedium": "Médio",
-      "engagementLow": "Baixo"
+      "engagementLow": "Baixo",
+      "generating": "Gerando relatório...",
+      "generatingHint": "A IA está analisando a sessão. Pode levar um momento."
     },
     "settings": {
       "title": "Configurações",
@@ -110,7 +117,8 @@
       "backToParent": "Voltar",
       "greeting": "Olá {{name}}! Vamos brincar e aprender!",
       "allDone": "Parabéns!",
-      "greatJob": "Você foi incrível!"
+      "greatJob": "Você foi incrível!",
+      "correctAnswer": "Muito bem!"
     }
   },
   "moods": {
